@@ -1,0 +1,312 @@
+using System;
+using System.Collections.Generic;
+using System.ComponentModel;
+using System.Data;
+using System.Drawing;
+using System.IO;
+using System.Linq;
+using System.Text;
+using System.Threading.Tasks;
+using System.Windows.Forms;
+
+namespace GATO_NA11
+{
+    public partial class Gato : Form
+    {
+        /// <summary>
+        /// variables
+        /// </summary>
+        bool BUTTONS_ENABLE = true;
+        bool BUTTONS_DISABLE = false;
+        Button[] buttonsCats = new Button[9];
+        int[] buttonsValue = new int[9];
+        int[] catValue = new int[9];
+        string X = "X";
+        string O = "O";
+        string urlCat = "\\tom.png";
+        string urlX = "\\X.jpg";
+        string urlO = "\\O.jpg";
+        string players = "X or O";
+        int zero = 0;
+        int coordinateX = 226;
+        int coodinateY = 311;
+        int countQtyX = 0;
+        int countQtyY = 0;
+        int countMovements = 0;
+        string shift;
+        int defaultValue = 6;
+        public Gato()
+        {
+            InitializeComponent();
+        }
+
+        private void Gato_Load(object sender, EventArgs e)
+        {
+            CreateButtons();
+        }
+        private void CreateButtons()
+        {
+            for (int i = 0; i < 9; i++)
+            {
+                Button catsButtons = new Button();
+                AssignValuesAndProperties(i, catsButtons);
+
+                AssignCoordinates(i, catsButtons);
+
+                Controls.Add(catsButtons);
+            }
+        }
+
+        private void AssignCoordinates(int i, Button catsButtons)
+        {
+            if (i >= 0 && i < 3)
+            {
+                catsButtons.Location = new Point((3 + (coordinateX * i)), coodinateY);
+            }
+            if (i >= 3 && i < 6)
+            {
+                catsButtons.Location = new Point((3 + (coordinateX * (i - 3))), (coodinateY - 143));
+            }
+            if (i >= 6 && i < 9)
+            {
+                catsButtons.Location = new Point((3 + (coordinateX * (i - 6))), (coodinateY - 286));
+            }
+        }
+
+        private void AssignValuesAndProperties(int i, Button catsButtons)
+        {
+            catsButtons.Enabled = BUTTONS_DISABLE;
+            catsButtons.Width = 220;
+            catsButtons.Height = 137;
+            catsButtons.Name = "Cat" + i.ToString();
+            catsButtons.BackgroundImageLayout = ImageLayout.Stretch;
+            catsButtons.BackgroundImage = Image.FromFile(Directory.GetCurrentDirectory() + urlCat);
+            catsButtons.Click += SelectYourPlace;
+            catsButtons.MouseHover += MouseHover;
+            catsButtons.MouseLeave += MouseLeave;
+            buttonsValue[i] = i;
+            buttonsCats[i] = catsButtons;
+            catValue[i] = defaultValue;
+        }
+        /// <summary>
+        /// 1
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
+        private void SelectYourPlace(object sender, EventArgs e)
+        {
+            Button Btn = (Button)sender;
+            CatLogic(Btn);
+        }
+        /// <summary>
+        /// 1
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
+        private void BtnActualizar_Click(object sender, EventArgs e)
+        {
+            lblQtyX.Text = zero.ToString();
+            lblQtyY.Text = zero.ToString();
+            countQtyX = zero;
+            countQtyY = zero;
+            lblShiftXorY.Text = players;
+            ResetImg();
+            BtnNuevo.Enabled = BUTTONS_DISABLE;
+            BtnIniciar.Enabled = BUTTONS_ENABLE;
+
+            DisableOrEnableButtons(BUTTONS_DISABLE);
+        }
+        private void ResetImg()
+        {
+            for (int i = 0; i < buttonsCats.Length; i++)
+            {
+                catValue[i] = defaultValue;
+                buttonsCats[i].BackgroundImage = Image.FromFile(Directory.GetCurrentDirectory() + urlCat);
+
+            }
+        }
+        private void DisableOrEnableButtons(bool status)
+        {
+            foreach (var Btn in buttonsCats)
+            {
+                Btn.Enabled = status;
+            }
+
+        }
+        private void randomXorY()
+        {
+            Random rad = new Random();
+            int opcion = rad.Next(-1, 2);
+            lblShiftXorY.Text = opcion == 0 ? X : O;
+        }
+        /// <summary>
+        /// 3
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
+        private void BtnNuevo_Click(object sender, EventArgs e)
+        {
+            ResetImg();
+            randomXorY();
+            DisableOrEnableButtons(BUTTONS_ENABLE);
+            countMovements = zero;
+        }
+        /// <summary>
+        /// 2
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
+        private void BtnIniciar_Click(object sender, EventArgs e)
+        {
+            BtnNuevo.Enabled = BUTTONS_ENABLE;
+            BtnNuevo.Enabled = BUTTONS_ENABLE;
+            BtnIniciar.Enabled = BUTTONS_DISABLE;
+            DisableOrEnableButtons(BUTTONS_ENABLE);
+            randomXorY();
+        }
+
+        private void CatLogic(Button btnCat)
+        {
+            shift = lblShiftXorY.Text;
+            var index = Array.IndexOf(buttonsCats, btnCat);
+            var nextMovement = lblShiftXorY.Text == X ? O : X;
+            var value = lblShiftXorY.Text == X ? 1 : 0;
+            var URL = lblShiftXorY.Text == X ? urlX : urlO;
+            SelectIMGXorY(btnCat, index, nextMovement, value, URL);
+            Validation(value);
+        }
+
+        private void SelectIMGXorY(Button btnCat, int index, string nextMovement, int value, string URL)
+        {
+            catValue[index] = value;
+            btnCat.BackgroundImage = Image.FromFile(Directory.GetCurrentDirectory() + URL);
+            lblShiftXorY.Text = nextMovement;
+        }
+        private void Validation(int value)
+        {
+            string comparation = "Horizontal";
+            var i = 0;
+            while (i < 8)
+            {
+                switch (comparation)
+                {
+                    case "Horizontal":
+                        if (catValue[i] == value && catValue[i + 1] == value && catValue[i + 2] == value)
+                        {
+                            Continue();
+                            return;
+                        }
+                        i += 3;
+
+                        if (i != 9) continue;
+                        comparation = "Vertical";
+                        i = 0;
+                        break;
+                    case "Vertical":
+                        if (catValue[i] == value && catValue[i + 3] == value && catValue[i + 6] == value)
+                        {
+                            Continue();
+                            return;
+                        }
+                        i += 1;
+                        if (i != 3) continue;
+                        comparation = "Diagonal";
+                        i = 0;
+                        break;
+                    case "Diagonal":
+                        if (catValue[i] == value && catValue[4] == value && catValue[i + (8 - (i * 2))] == value)
+                        {
+                            Continue();
+                            return;
+                        }
+                        i += 2;
+                        if (i != 4) continue;
+                        i = 8;
+                        break;
+                }
+            }
+            NumberOfMovements();
+        }
+
+        private void Continue()
+        {
+            DialogResult response = MessageBox.Show("winner: " + shift + " Would you like play again?", "Ahh half Meter", MessageBoxButtons.YesNo, MessageBoxIcon.Question);
+            if (shift == "X")
+            {
+                countQtyX += 1;
+                lblQtyX.Text = countQtyX.ToString();
+            }
+            else
+            {
+                countQtyY += 1;
+                lblQtyY.Text = countQtyY.ToString();
+            }
+            switch (response)
+            {
+                case DialogResult.Yes:
+                    ResetImg();
+                    randomXorY();
+                    countMovements = zero;
+                    break;
+                case DialogResult.No:
+                    Application.Exit();
+                    break;
+                default:
+                    break;
+            }
+        }
+
+        private void NumberOfMovements()
+        {
+            countMovements++;
+            if (countMovements != 9) return;
+
+            DialogResult response = MessageBox.Show("End game, would, Would you like to continue playing?", "Ahh, half Meterrr", MessageBoxButtons.YesNo, MessageBoxIcon.Question);
+            switch (response)
+            {
+                case DialogResult.Yes:
+                    ResetImg();
+                    randomXorY();
+                    countMovements = 0;
+                    break;
+                case DialogResult.No:
+                    Application.Exit();
+                    break;
+
+            }
+        }
+
+        private void MouseHover(object sender, EventArgs e)
+        {
+            Button Btn = (Button)sender;
+            var index = Array.IndexOf(buttonsCats, Btn);
+            var hasValue = (catValue[index] == 1 || catValue[index] == 0);
+            if (hasValue) return;
+            Hover(Btn);
+        }
+        private void Hover(Button cat)
+        {
+            var url = lblShiftXorY.Text == X ? urlX : urlO ;
+            cat.BackgroundImage = Image.FromFile(Directory.GetCurrentDirectory() + url);
+
+        }
+        private void MouseLeave(object sender, EventArgs e)
+        {
+            Button Btn = (Button)sender;
+            var index = Array.IndexOf(buttonsCats, Btn);
+            var hasValue = (catValue[index] == 1 || catValue[index] == 0);
+            if (hasValue) return;
+            Btn.BackgroundImage = Image.FromFile(Directory.GetCurrentDirectory() + urlCat);
+        }
+
+        private void Gato_KeyPress(object sender, KeyPressEventArgs e)
+        {
+            if (e.KeyChar == (char)Keys.Escape)
+            {
+                Application.Exit();
+            }
+        }
+    }
+    
+}
+
